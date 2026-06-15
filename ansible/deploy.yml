@@ -1,0 +1,33 @@
+---
+- hosts: webserver
+  become: false
+
+  vars:
+    war_source: "{{ lookup('env', 'WORKSPACE') }}/target/maven-webapp1.war"
+
+  tasks:
+    - name: Stop Tomcat
+      service:
+        name: tomcat10
+        state: stopped
+
+    - name: Delete old WAR
+      file:
+        path: /var/lib/tomcat10/webapps/maven-webapp1.war
+        state: absent
+
+    - name: Delete old extracted folder
+      file:
+        path: /var/lib/tomcat10/webapps/maven-webapp1
+        state: absent
+
+    - name: Copy WAR from Jenkins Workspace
+      copy:
+        src: "{{ war_source }}"
+        dest: /var/lib/tomcat10/webapps/maven-webapp1.war
+        remote_src: yes
+
+    - name: Start Tomcat
+      service:
+        name: tomcat10
+        state: started
